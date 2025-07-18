@@ -1,0 +1,2207 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการสต็อกอะไหล่</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter & Sarabun -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons for icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- SweetAlert2 for beautiful alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Signature Pad for drawing signatures -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            background-color: #f0f9ff; /* Light blue background */
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Active navigation link style */
+        .nav-link.active, .submenu-link.active {
+            background-color: #0891b2; /* Cyan-700 */
+            color: white;
+        }
+        /* Page transition effect */
+        .page-content {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        #signature-pad {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Login Page -->
+    <div id="auth-container" class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md">
+            <!-- Login Form -->
+            <form id="login-form" class="bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">เข้าสู่ระบบ</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="login-id" class="block text-sm font-medium text-gray-700">Email หรือ เบอร์โทร</label>
+                        <input type="text" id="login-id" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                    <div>
+                        <label for="login-password" class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
+                        <input type="password" id="login-password" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                    <button type="submit" class="w-full px-6 py-3 rounded-lg text-white bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 font-semibold">เข้าสู่ระบบ</button>
+                </div>
+                <p class="text-center text-sm text-gray-600 mt-6">
+                    ยังไม่มีบัญชี? <a href="#" id="show-register-link" class="font-medium text-cyan-600 hover:text-cyan-800">สมัครสมาชิกที่นี่</a>
+                </p>
+            </form>
+
+            <!-- Registration Form -->
+            <form id="register-form" class="bg-white p-8 rounded-xl shadow-lg hidden">
+                 <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">สมัครสมาชิก</h2>
+                 <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="register-fullname" class="block text-sm font-medium text-gray-700">ชื่อ-สกุล</label>
+                            <input type="text" id="register-fullname" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label for="register-phone" class="block text-sm font-medium text-gray-700">เบอร์โทร</label>
+                            <input type="tel" id="register-phone" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                            <label for="register-email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="register-email" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label for="register-password" class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
+                            <input type="password" id="register-password" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="register-agency" class="block text-sm font-medium text-gray-700">หน่วยงาน</label>
+                            <input type="text" id="register-agency" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                         <div>
+                            <label for="register-department" class="block text-sm font-medium text-gray-700">แผนก</label>
+                            <input type="text" id="register-department" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                         <div>
+                            <label for="register-bu" class="block text-sm font-medium text-gray-700">ศูนย์ธุรกิจ</label>
+                            <input type="text" id="register-bu" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full px-6 py-3 rounded-lg text-white bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 font-semibold">สมัครสมาชิก</button>
+                 </div>
+                 <p class="text-center text-sm text-gray-600 mt-6">
+                    มีบัญชีอยู่แล้ว? <a href="#" id="show-login-link" class="font-medium text-cyan-600 hover:text-cyan-800">เข้าสู่ระบบที่นี่</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container (hidden by default) -->
+    <div id="app-container" class="flex h-screen hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-gradient-to-b from-cyan-600 to-teal-700 text-white flex flex-col transition-all duration-300 md:block" id="sidebar">
+            <div class="p-4 border-b border-cyan-500 flex items-center">
+                <i data-lucide="wrench" class="mr-3"></i>
+                <h1 class="text-xl font-bold">สต็อกอะไหล่</h1>
+            </div>
+            <nav class="flex-1 px-2 py-4 space-y-2">
+                <a href="#" class="nav-link flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 hover:bg-cyan-700 active" data-page="dashboard">
+                    <i data-lucide="layout-dashboard" class="mr-3 h-5 w-5"></i> Dashboard
+                </a>
+                <a href="#" class="nav-link flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 hover:bg-cyan-700" data-page="stock-list">
+                    <i data-lucide="package" class="mr-3 h-5 w-5"></i> รายการอะไหล่
+                </a>
+                
+                <!-- Dropdown Menu for Part Management -->
+                <div>
+                    <button id="manage-parts-toggle" class="nav-link w-full flex justify-between items-center px-4 py-2.5 rounded-lg transition-colors duration-200 hover:bg-cyan-700">
+                        <span class="flex items-center">
+                            <i data-lucide="package-plus" class="mr-3 h-5 w-5"></i>
+                            จัดการอะไหล่
+                        </span>
+                        <i data-lucide="chevron-down" id="manage-parts-icon" class="h-5 w-5 transition-transform"></i>
+                    </button>
+                    <div id="manage-parts-submenu" class="pl-4 pt-2 space-y-1 hidden">
+                        <a href="#" class="nav-link submenu-link flex items-center px-4 py-2 rounded-lg text-sm hover:bg-cyan-700" data-page="add-part">
+                            <i data-lucide="plus" class="mr-2 h-4 w-4"></i> เพิ่มอะไหล่ใหม่
+                        </a>
+                        <a href="#" class="nav-link submenu-link flex items-center px-4 py-2 rounded-lg text-sm hover:bg-cyan-700" data-page="edit-part">
+                            <i data-lucide="file-edit" class="mr-2 h-4 w-4"></i> แก้ไขอะไหล่
+                        </a>
+                        <a href="#" class="nav-link submenu-link flex items-center px-4 py-2 rounded-lg text-sm hover:bg-cyan-700" data-page="request-factory">
+                            <i data-lucide="factory" class="mr-2 h-4 w-4"></i> ขอเบิกจากโรงงาน
+                        </a>
+                        <a href="#" class="nav-link submenu-link flex items-center px-4 py-2 rounded-lg text-sm hover:bg-cyan-700" data-page="receive-stock">
+                            <i data-lucide="package-check" class="mr-2 h-4 w-4"></i> รับสินค้าเข้าสต็อก
+                        </a>
+                        <a href="#" class="nav-link submenu-link flex items-center px-4 py-2 rounded-lg text-sm hover:bg-cyan-700" data-page="manage-factory-request">
+                            <i data-lucide="clipboard-list" class="mr-2 h-4 w-4"></i> จัดการใบขอเบิก
+                        </a>
+                    </div>
+                </div>
+                
+                <a href="#" class="nav-link flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 hover:bg-cyan-700" data-page="withdraw-request">
+                    <i data-lucide="shopping-cart" class="mr-3 h-5 w-5"></i> เบิกอะไหล่
+                    <span id="cart-badge" class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full hidden">0</span>
+                </a>
+
+                <!-- Dropdown Menu for Approval -->
+                <div>
+                    <button id="approval-toggle" class="nav-link w-full flex justify-between items-center px-4 py-2.5 rounded-lg transition-colors duration-200 hover:bg-cyan-700">
+                        <span class="flex items-center">
+                            <i data-lucide="check-circle" class="mr-3 h-5 w-5"></i>
+                            อนุมัติ
+                        </span>
+                        <i data-lucide="chevron-down" id="approval-icon" class="h-5 w-5 transition-transform"></i>
+                    </button>
+                    <div id="approval-submenu" class="pl-4 pt-2 space-y-1 hidden">
+                        <a href="#" class="nav-link submenu-link flex items-center px-4 py-2 rounded-lg text-sm hover:bg-cyan-700" data-page="approval-internal">
+                            <i data-lucide="shopping-cart" class="mr-2 h-4 w-4"></i> ใบเบิกภายใน
+                        </a>
+                        <a href="#" class="nav-link submenu-link flex items-center px-4 py-2 rounded-lg text-sm hover:bg-cyan-700" data-page="approval-factory">
+                            <i data-lucide="factory" class="mr-2 h-4 w-4"></i> ใบเบิกจากโรงงาน
+                        </a>
+                    </div>
+                </div>
+
+                <a href="#" class="nav-link flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 hover:bg-cyan-700" data-page="history">
+                    <i data-lucide="history" class="mr-3 h-5 w-5"></i> ประวัติการเบิก
+                </a>
+                
+                <!-- Dropdown Menu for Settings -->
+                <div>
+                    <button id="settings-toggle" class="nav-link w-full flex justify-between items-center px-4 py-2.5 rounded-lg transition-colors duration-200 hover:bg-cyan-700">
+                        <span class="flex items-center">
+                            <i data-lucide="settings" class="mr-3 h-5 w-5"></i>
+                            ตั้งค่าระบบ
+                        </span>
+                        <i data-lucide="chevron-down" id="settings-icon" class="h-5 w-5 transition-transform"></i>
+                    </button>
+                    <div id="settings-submenu" class="pl-4 pt-2 space-y-1 hidden">
+                        <a href="#" class="nav-link submenu-link flex items-center px-4 py-2 rounded-lg text-sm hover:bg-cyan-700" data-page="users">
+                            <i data-lucide="users" class="mr-2 h-4 w-4"></i> ผู้ใช้งาน
+                        </a>
+                        <a href="#" class="nav-link submenu-link flex items-center px-4 py-2 rounded-lg text-sm hover:bg-cyan-700" data-page="general-settings">
+                            <i data-lucide="sliders-horizontal" class="mr-2 h-4 w-4"></i> แก้ไขข้อมูลส่วนตัว
+                        </a>
+                    </div>
+                </div>
+
+            </nav>
+            <div class="p-4 border-t border-cyan-500">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <img src="https://placehold.co/40x40/a0e9ff/333333?text=User" class="rounded-full mr-3">
+                        <div>
+                            <p id="sidebar-username" class="font-semibold">...</p>
+                            <p id="sidebar-user-role" class="text-xs text-cyan-200">...</p>
+                        </div>
+                    </div>
+                    <button id="logout-btn" title="ออกจากระบบ" class="p-2 rounded-full hover:bg-cyan-700">
+                        <i data-lucide="log-out" class="h-5 w-5"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-8 overflow-y-auto">
+            <button id="menu-toggle" class="md:hidden mb-4 p-2 rounded-md bg-gray-200 text-gray-800">
+                <i data-lucide="menu"></i>
+            </button>
+            <div id="dashboard-page" class="page-content hidden">
+                 <h2 class="text-3xl font-bold text-gray-800 mb-6">📊 Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4 border-l-4 border-cyan-500"><div class="bg-cyan-100 p-3 rounded-full"><i data-lucide="archive" class="text-cyan-600"></i></div><div><p class="text-gray-500">อะไหล่ในคลัง</p><p id="total-parts-value" class="text-2xl font-bold text-gray-800">...</p></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4 border-l-4 border-amber-500"><div class="bg-amber-100 p-3 rounded-full"><i data-lucide="alert-triangle" class="text-amber-600"></i></div><div><p class="text-gray-500">อะไหล่ใกล้หมด</p><p id="low-stock-value" class="text-2xl font-bold text-gray-800">...</p></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4 border-l-4 border-teal-500"><div class="bg-teal-100 p-3 rounded-full"><i data-lucide="check-check" class="text-teal-600"></i></div><div><p class="text-gray-500">รายการอนุมัติ</p><p id="approved-value" class="text-2xl font-bold text-gray-800">...</p></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4 border-l-4 border-red-500"><div class="bg-red-100 p-3 rounded-full"><i data-lucide="clock" class="text-red-600"></i></div><div><p class="text-gray-500">รออนุมัติ</p><p id="pending-value" class="text-2xl font-bold text-gray-800">...</p></div></div>
+                </div>
+            </div>
+            <div id="stock-list-page" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">📦 รายการอะไหล่</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4"><input type="text" id="stock-search" placeholder="🔍 ค้นหาด้วยรหัสหรือชื่อ..." class="w-full md:w-1/3 p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500"><select id="category-filter" class="w-full md:w-1/4 p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500"><option value="">ทุกหมวดหมู่</option></select></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3">รูปภาพ</th>
+                                    <th class="p-3">รหัส</th>
+                                    <th class="p-3">ชื่ออะไหล่</th>
+                                    <th class="p-3">หมวดหมู่</th>
+                                    <th class="p-3 text-right">ราคา</th>
+                                    <th class="p-3">คงเหลือ</th>
+                                    <th class="p-3">หน่วยนับ</th>
+                                    <th class="p-3">สถานะ</th>
+                                    <th class="p-3 text-center">ดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="add-part-page" class="page-content hidden">
+                <h2 id="part-form-title" class="text-3xl font-bold text-gray-800 mb-6">➕ เพิ่มอะไหล่ใหม่</h2>
+                <form id="add-part-form" class="bg-white p-8 rounded-xl shadow-md max-w-2xl mx-auto space-y-6">
+                     <input type="hidden" id="part-id-hidden">
+                     <div>
+                        <label for="part-image" class="block text-sm font-medium text-gray-700">รูปภาพอะไหล่ (JPG, PNG เท่านั้น)</label>
+                        <input type="file" id="part-image" accept="image/jpeg, image/png" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100">
+                        <img id="part-image-preview" src="" class="mt-2 h-24 w-24 object-cover rounded-md hidden" alt="Image Preview"/>
+                    </div>
+                     <div><label for="part-code" class="block text-sm font-medium text-gray-700">รหัสสินค้า</label><input type="text" id="part-code" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500 bg-gray-50 disabled:cursor-not-allowed"></div>
+                     <div><label for="part-name" class="block text-sm font-medium text-gray-700">ชื่อสินค้า</label><input type="text" id="part-name" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500"></div>
+                     <div><label for="part-category" class="block text-sm font-medium text-gray-700">หมวดหมู่</label><input type="text" id="part-category" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500"></div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="part-price" class="block text-sm font-medium text-gray-700">ราคาสินค้า (ต่อหน่วย)</label>
+                            <input type="number" id="part-price" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500" step="0.01" min="0" placeholder="0.00">
+                        </div>
+                     </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="part-unit" class="block text-sm font-medium text-gray-700">หน่วยนับ</label>
+                            <select id="part-unit" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500 bg-white">
+                                <option>UNIT</option>
+                                <option>PACK</option>
+                                <option>ROLL</option>
+                                <option value="other">อื่นๆ...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="part-unit-other" class="block text-sm font-medium text-gray-700">ระบุหน่วยนับเอง</label>
+                            <input type="text" id="part-unit-other" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500 hidden" placeholder="เช่น ชิ้น, กล่อง">
+                        </div>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                         <div><label for="part-quantity" class="block text-sm font-medium text-gray-700">จำนวนเริ่มต้น</label><input type="number" id="part-quantity" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500" value="0"></div>
+                         <div><label for="part-min" class="block text-sm font-medium text-gray-700">Min Stock</label><input type="number" id="part-min" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500" value="10"></div>
+                         <div><label for="part-max" class="block text-sm font-medium text-gray-700">Max Stock</label><input type="number" id="part-max" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500" value="100"></div>
+                     </div>
+                     <div class="flex justify-end space-x-4">
+                        <button type="button" id="cancel-part-form" class="px-6 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300">ยกเลิก</button>
+                        <button type="submit" id="submit-part-form" class="px-6 py-2 rounded-lg text-white bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700">บันทึก</button>
+                     </div>
+                </form>
+            </div>
+            <div id="edit-part-page" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">✏️ แก้ไขข้อมูลอะไหล่</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                     <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                        <input type="text" id="edit-stock-search" placeholder="🔍 ค้นหาด้วยรหัสหรือชื่อ..." class="w-full md:w-1/3 p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3">รูปภาพ</th>
+                                    <th class="p-3">รหัส</th>
+                                    <th class="p-3">ชื่ออะไหล่</th>
+                                    <th class="p-3 text-right">ราคา</th>
+                                    <th class="p-3">คงเหลือ</th>
+                                    <th class="p-3 text-center">ดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="edit-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="request-factory-page" class="page-content hidden">
+                <h2 id="factory-order-form-title" class="text-3xl font-bold text-gray-800 mb-6">🏭 ขอเบิกอะไหล่จากโรงงาน</h2>
+                
+                <form id="factory-order-form" class="space-y-6">
+                    <!-- Order Details Section -->
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">รายละเอียดใบขอเบิก</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="factory-order-id" class="block text-sm font-medium text-gray-700">เลขที่ออเดอร์</label>
+                                <input type="text" id="factory-order-id" disabled class="mt-1 block w-full p-2 border rounded-lg bg-gray-100">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label for="factory-requester-name" class="block text-sm font-medium text-gray-700">ชื่อ-สกุล</label>
+                                <input type="text" id="factory-requester-name" disabled class="mt-1 block w-full p-2 border rounded-lg bg-gray-100">
+                            </div>
+                            <div>
+                                <label for="factory-requester-agency" class="block text-sm font-medium text-gray-700">หน่วยงาน</label>
+                                <input type="text" id="factory-requester-agency" disabled class="mt-1 block w-full p-2 border rounded-lg bg-gray-100">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label for="factory-requester-department" class="block text-sm font-medium text-gray-700">แผนก</label>
+                                <input type="text" id="factory-requester-department" disabled class="mt-1 block w-full p-2 border rounded-lg bg-gray-100">
+                            </div>
+                            <div>
+                                <label for="factory-requester-bu" class="block text-sm font-medium text-gray-700">ศูนย์ธุรกิจ</label>
+                                <input type="text" id="factory-requester-bu" disabled class="mt-1 block w-full p-2 border rounded-lg bg-gray-100">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label for="factory-order-purpose" class="block text-sm font-medium text-gray-700">วัตถุประสงค์ในการเบิก</label>
+                            <textarea id="factory-order-purpose" rows="3" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500" placeholder="เช่น เพื่อเติมสต็อกประจำเดือน"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Search and Add Section -->
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">ค้นหาและเพิ่มอะไหล่ (สูงสุด 20 รายการ)</h3>
+                        <div class="flex gap-4">
+                            <input type="text" id="factory-order-search" placeholder="🔍 ค้นหาด้วยรหัสหรือชื่ออะไหล่..." class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div id="factory-order-search-results" class="mt-2 max-h-60 overflow-y-auto border rounded-lg"></div>
+                    </div>
+                
+                    <!-- Order List Section -->
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">รายการในใบขอเบิก</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="p-3">ชื่ออะไหล่</th>
+                                        <th class="p-3">คงเหลือ / Min</th>
+                                        <th class="p-3 text-center">จำนวนที่แนะนำ</th>
+                                        <th class="p-3 text-center" style="width: 150px;">จำนวนที่สั่ง</th>
+                                        <th class="p-3 text-center">ดำเนินการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="factory-order-body"></tbody>
+                            </table>
+                        </div>
+                         <div id="factory-order-empty-message" class="text-center p-8 text-gray-500">
+                            <i data-lucide="file-text" class="mx-auto h-16 w-16 text-gray-300"></i>
+                            <p class="mt-4 text-lg">ยังไม่มีรายการในใบขอเบิก</p>
+                            <p class="text-sm">รายการที่ต่ำกว่า Minimum Stock จะแสดงที่นี่โดยอัตโนมัติ</p>
+                        </div>
+                        <div class="flex justify-end mt-6">
+                            <button type="submit" id="submit-factory-order-btn" class="px-8 py-3 rounded-lg text-white bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i data-lucide="send" class="inline-block mr-2"></i>ส่งใบขอเบิก
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div id="receive-stock-page" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">📦 รับสินค้าเข้าสต็อก</h2>
+                
+                <!-- Order Selection -->
+                <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">เลือกใบสั่งซื้อจากโรงงาน</h3>
+                    <select id="receive-order-select" class="w-full md:w-1/2 p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500 bg-white">
+                        <option value="">-- กรุณาเลือกใบสั่งซื้อ --</option>
+                        <!-- JS will populate this -->
+                    </select>
+                </div>
+            
+                <!-- Order Items Table -->
+                <div id="receive-items-container" class="bg-white p-6 rounded-xl shadow-md hidden">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">รายการในใบสั่งซื้อ: <span id="selected-order-id" class="font-mono"></span></h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3">ชื่ออะไหล่</th>
+                                    <th class="p-3 text-center">จำนวนสั่ง</th>
+                                    <th class="p-3 text-center">รับแล้ว</th>
+                                    <th class="p-3 text-center">ค้างรับ</th>
+                                    <th class="p-3 text-center" style="width: 150px;">จำนวนที่รับครั้งนี้</th>
+                                    <th class="p-3 text-center">ดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="receive-items-body">
+                                <!-- Items will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="manage-factory-request-page" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">📋 จัดการใบขอเบิกอะไหล่โรงงาน</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                     <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3">เลขที่ออเดอร์</th>
+                                    <th class="p-3">วัตถุประสงค์</th>
+                                    <th class="p-3 text-center">สถานะ</th>
+                                    <th class="p-3 text-center">ดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manage-request-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="withdraw-request-page" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">🛒 ใบขอเบิกอะไหล่</h2>
+                <form id="withdraw-form" class="space-y-6">
+                    <!-- Order Details Section -->
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">รายละเอียดใบขอเบิก</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="withdraw-order-id" class="block text-sm font-medium text-gray-700">เลขที่ออเดอร์</label>
+                                <input type="text" id="withdraw-order-id" disabled class="mt-1 block w-full p-2 border rounded-lg bg-gray-100">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label for="requester-name" class="block text-sm font-medium text-gray-700">ชื่อ-สกุล</label>
+                                <input type="text" id="requester-name" disabled class="mt-1 block w-full p-2 border rounded-lg bg-gray-100">
+                            </div>
+                            <div>
+                                <label for="requester-agency" class="block text-sm font-medium text-gray-700">หน่วยงาน</label>
+                                <input type="text" id="requester-agency" disabled class="mt-1 block w-full p-2 border rounded-lg bg-gray-100">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label for="requester-department" class="block text-sm font-medium text-gray-700">แผนก</label>
+                                <input type="text" id="requester-department" disabled class="mt-1 block w-full p-2 border rounded-lg bg-gray-100">
+                            </div>
+                            <div>
+                                <label for="requester-bu" class="block text-sm font-medium text-gray-700">ศูนย์ธุรกิจ</label>
+                                <input type="text" id="requester-bu" disabled class="mt-1 block w-full p-2 border rounded-lg bg-gray-100">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label for="withdraw-purpose" class="block text-sm font-medium text-gray-700">วัตถุประสงค์ในการเบิก</label>
+                            <textarea id="withdraw-purpose" rows="3" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500" placeholder="เช่น เพื่อซ่อมบำรุงเครื่องจักร A ประจำเดือน"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Cart Items Section -->
+                    <div id="withdraw-items-container" class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">รายการอะไหล่ในตะกร้า (สูงสุด 20 รายการ)</h3>
+                        <div id="cart-view">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead class="bg-gray-100">
+                                        <tr>
+                                            <th class="p-3">รหัส / ชื่ออะไหล่</th>
+                                            <th class="p-3 text-center">หน่วยนับ</th>
+                                            <th class="p-3 text-center">จำนวนที่ขอเบิก</th>
+                                            <th class="p-3 text-center">ดำเนินการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cart-items-body"></tbody>
+                                </table>
+                            </div>
+                            <div id="cart-empty-message" class="text-center p-8 text-gray-500 hidden">
+                                <i data-lucide="shopping-cart" class="mx-auto h-16 w-16 text-gray-300"></i>
+                                <p class="mt-4 text-lg">ตะกร้าของคุณว่างเปล่า</p>
+                                <p>กรุณาไปที่หน้ารายการอะไหล่เพื่อเพิ่มสินค้า</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-8 py-3 rounded-lg text-white bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 font-semibold">
+                            <i data-lucide="send" class="inline-block mr-2"></i>ส่งคำขอเบิก
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Approval Pages -->
+            <div id="approval-internal-page" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">✅ อนุมัติใบเบิกภายใน</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                     <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3">เลขที่ออเดอร์</th>
+                                    <th class="p-3">ผู้ขอเบิก</th>
+                                    <th class="p-3">วัตถุประสงค์</th>
+                                    <th class="p-3 text-center">สถานะ</th>
+                                    <th class="p-3 text-center">ดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="approval-internal-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="approval-factory-page" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">✅ อนุมัติใบเบิกจากโรงงาน</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                     <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3">เลขที่ออเดอร์</th>
+                                    <th class="p-3">ผู้ขอเบิก</th>
+                                    <th class="p-3">วัตถุประสงค์</th>
+                                    <th class="p-3 text-center">สถานะ</th>
+                                    <th class="p-3 text-center">ดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="approval-factory-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Page -->
+            <div id="history-page" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">📄 ประวัติการเบิก</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- All Withdrawals -->
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">รายการเบิกทั้งหมด</h3>
+                        <div class="overflow-x-auto max-h-96">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-100 sticky top-0">
+                                    <tr>
+                                        <th class="p-3">เลขที่ออเดอร์</th>
+                                        <th class="p-3">ประเภท</th>
+                                        <th class="p-3 text-center">สถานะ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="all-history-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Top Withdrawn Items -->
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">10 อันดับรายการเบิกบ่อย</h3>
+                         <div class="overflow-x-auto max-h-96">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-100 sticky top-0">
+                                    <tr>
+                                        <th class="p-3 text-center">#</th>
+                                        <th class="p-3">ชื่ออะไหล่</th>
+                                        <th class="p-3 text-center">จำนวนที่เบิก</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-withdrawn-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Page -->
+            <div id="users-page" class="page-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">🧑‍🤝‍🧑 จัดการผู้ใช้งาน</h2>
+                    <button id="add-user-btn" class="flex items-center px-4 py-2 rounded-lg text-white bg-cyan-600 hover:bg-cyan-700">
+                        <i data-lucide="plus" class="mr-2 h-5 w-5"></i> เพิ่มผู้ใช้ใหม่
+                    </button>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3">ชื่อ-สกุล</th>
+                                    <th class="p-3">Email</th>
+                                    <th class="p-3">เบอร์โทร</th>
+                                    <th class="p-3">หน่วยงาน</th>
+                                    <th class="p-3">แผนก</th>
+                                    <th class="p-3 text-center">บทบาท</th>
+                                    <th class="p-3">สิทธิ์การอนุมัติ</th>
+                                    <th class="p-3 text-center">ดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="general-settings-page" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">⚙️ แก้ไขข้อมูลส่วนตัว</h2>
+                <form id="general-settings-form" class="bg-white p-8 rounded-xl shadow-md max-w-2xl mx-auto space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="settings-fullname" class="block text-sm font-medium text-gray-700">ชื่อ-สกุล</label>
+                            <input type="text" id="settings-fullname" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label for="settings-email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="settings-email" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500 bg-gray-100" disabled>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="settings-phone" class="block text-sm font-medium text-gray-700">เบอร์โทร</label>
+                            <input type="tel" id="settings-phone" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="settings-agency" class="block text-sm font-medium text-gray-700">หน่วยงาน</label>
+                            <input type="text" id="settings-agency" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                         <div>
+                            <label for="settings-department" class="block text-sm font-medium text-gray-700">แผนก</label>
+                            <input type="text" id="settings-department" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                         <div>
+                            <label for="settings-bu" class="block text-sm font-medium text-gray-700">ศูนย์ธุรกิจ</label>
+                            <input type="text" id="settings-bu" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                    </div>
+                    <div class="border-t pt-6 space-y-4">
+                        <h4 class="text-md font-semibold text-gray-800">เปลี่ยนรหัสผ่าน (กรอกเฉพาะเมื่อต้องการเปลี่ยน)</h4>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="settings-password" class="block text-sm font-medium text-gray-700">รหัสผ่านใหม่</label>
+                                <input type="password" id="settings-password" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                            </div>
+                            <div>
+                                <label for="settings-confirm-password" class="block text-sm font-medium text-gray-700">ยืนยันรหัสผ่านใหม่</label>
+                                <input type="password" id="settings-confirm-password" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end pt-4 border-t">
+                        <button type="submit" class="px-8 py-3 rounded-lg text-white bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 font-semibold">
+                            <i data-lucide="save" class="inline-block mr-2"></i>บันทึกการเปลี่ยนแปลง
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Approval Details Modal -->
+    <div id="approval-modal" class="modal fixed w-full h-full top-0 left-0 flex items-center justify-center hidden bg-black bg-opacity-50" style="z-index: 9998;">
+        <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 lg:w-2/3 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-semibold">รายละเอียดใบเบิก: <span id="modal-order-id" class="font-mono"></span></h3>
+                <button id="close-approval-modal" class="p-2 rounded-full hover:bg-gray-200">
+                    <i data-lucide="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div><p class="text-sm text-gray-500">ผู้ขอเบิก</p><p id="modal-requester-name" class="font-semibold"></p></div>
+                    <div><p class="text-sm text-gray-500">วัตถุประสงค์</p><p id="modal-purpose" class="font-semibold"></p></div>
+                </div>
+                <table class="w-full text-left mb-6">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="p-2">รหัสสินค้า</th>
+                            <th class="p-2">ชื่อสินค้า</th>
+                            <th class="p-2 text-center">จำนวน</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-items-body"></tbody>
+                </table>
+                <!-- Signature Display Area -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                    <div id="modal-requester-signature-area" class="text-center">
+                        <p class="text-sm font-semibold">ลายเซ็นผู้ขอเบิก</p>
+                        <img id="modal-requester-signature-img" src="" class="mx-auto mt-2 border rounded-md h-24 bg-gray-50 hidden" alt="Requester Signature"/>
+                        <p id="modal-requester-signature-none" class="text-gray-400 mt-2">ไม่มีลายเซ็น</p>
+                    </div>
+                    <div id="modal-approver-signature-area" class="text-center">
+                        <p class="text-sm font-semibold">ลายเซ็นผู้อนุมัติ</p>
+                        <img id="modal-approver-signature-img" src="" class="mx-auto mt-2 border rounded-md h-24 bg-gray-50 hidden" alt="Approver Signature"/>
+                        <p id="modal-approver-signature-none" class="text-gray-400 mt-2">ยังไม่มีการอนุมัติ</p>
+                    </div>
+                </div>
+            </div>
+            <div id="modal-action-buttons" class="flex justify-end items-center p-4 border-t space-x-3">
+                <button id="modal-reject-cancel-btn" class="px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-700">
+                    <i data-lucide="x-circle" class="inline-block mr-1 h-5 w-5"></i> ไม่อนุมัติ
+                </button>
+                <button id="modal-reject-edit-btn" class="px-4 py-2 rounded-lg text-white bg-yellow-500 hover:bg-yellow-600">
+                    <i data-lucide="send-to-back" class="inline-block mr-1 h-5 w-5"></i> ตีกลับแก้ไข
+                </button>
+                <button id="modal-approve-btn" class="px-4 py-2 rounded-lg text-white bg-green-600 hover:bg-green-700">
+                    <i data-lucide="check-check" class="inline-block mr-1 h-5 w-5"></i> อนุมัติ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signature Modal -->
+    <div id="signature-modal" class="modal fixed w-full h-full top-0 left-0 flex items-center justify-center hidden bg-black bg-opacity-50" style="z-index: 9999;">
+        <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 lg:w-1/3 p-6">
+            <h3 id="signature-modal-title" class="text-xl font-semibold mb-4">กรุณาลงลายเซ็น</h3>
+            <div class="bg-gray-50 rounded-lg">
+                <canvas id="signature-pad" width="400" height="200"></canvas>
+            </div>
+            <div class="flex justify-between mt-4">
+                <button id="clear-signature-btn" class="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300">
+                    <i data-lucide="eraser" class="inline-block mr-1 h-5 w-5"></i> ล้าง
+                </button>
+                <button id="save-signature-btn" class="px-4 py-2 rounded-lg text-white bg-cyan-600 hover:bg-cyan-700">
+                    <i data-lucide="check" class="inline-block mr-1 h-5 w-5"></i> บันทึกลายเซ็น
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Form Modal -->
+    <div id="user-form-modal" class="modal fixed w-full h-full top-0 left-0 flex items-center justify-center hidden bg-black bg-opacity-50" style="z-index: 9997;">
+        <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 lg:w-2/3 max-h-[90vh] flex flex-col">
+             <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="user-modal-title" class="text-xl font-semibold">เพิ่มผู้ใช้ใหม่</h3>
+                <button id="close-user-modal-btn" class="p-2 rounded-full hover:bg-gray-200">
+                    <i data-lucide="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            <form id="user-form" class="p-6 space-y-4 overflow-y-auto">
+                <input type="hidden" id="user-id-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="user-fullname" class="block text-sm font-medium text-gray-700">ชื่อ-สกุล</label>
+                        <input type="text" id="user-fullname" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                     <div>
+                        <label for="user-role" class="block text-sm font-medium text-gray-700">บทบาท</label>
+                        <select id="user-role" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500 bg-white">
+                            <option value="ช่างเทคนิค">ช่างเทคนิค</option>
+                            <option value="เทคนิคผ้า">เทคนิคผ้า</option>
+                            <option value="พนักงานขาย">พนักงานขาย</option>
+                            <option value="ผู้จัดการ">ผู้จัดการ</option>
+                            <option value="admin 2">Admin 2</option>
+                        </select>
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="user-email" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="user-email" required class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                    <div>
+                        <label for="user-phone" class="block text-sm font-medium text-gray-700">เบอร์โทร</label>
+                        <input type="tel" id="user-phone" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="user-agency" class="block text-sm font-medium text-gray-700">หน่วยงาน</label>
+                        <input type="text" id="user-agency" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                     <div>
+                        <label for="user-department" class="block text-sm font-medium text-gray-700">แผนก</label>
+                        <input type="text" id="user-department" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                     <div>
+                        <label for="user-bu" class="block text-sm font-medium text-gray-700">ศูนย์ธุรกิจ</label>
+                        <input type="text" id="user-bu" class="mt-1 block w-full p-2 border rounded-lg focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                </div>
+                <div class="border-t pt-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="user-can-approve" class="h-4 w-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                        <span class="ml-2 text-sm text-gray-900">เป็นผู้อนุมัติได้</span>
+                    </label>
+                </div>
+                <div id="user-approval-rights-container" class="pl-6 space-y-2 hidden">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="user-approve-internal" class="h-4 w-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                        <span class="ml-2 text-sm text-gray-900">อนุมัติใบเบิกภายใน</span>
+                    </label>
+                     <label class="flex items-center">
+                        <input type="checkbox" id="user-approve-factory" class="h-4 w-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                        <span class="ml-2 text-sm text-gray-900">อนุมัติใบเบิกจากโรงงาน</span>
+                    </label>
+                </div>
+                <div class="flex justify-end pt-4 border-t">
+                    <button type="submit" class="px-6 py-2 rounded-lg text-white bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Loading Spinner Modal -->
+    <div id="loading-modal" class="modal fixed w-full h-full top-0 left-0 flex items-center justify-center hidden" style="z-index: 10000;">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+        <div class="z-50 flex flex-col items-center">
+            <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24 mb-4" style="border-top-color: #0891b2;"></div>
+            <h2 class="text-center text-white text-xl font-semibold">กำลังโหลด...</h2>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFJT5VXMtDSAjPDLY7jxjbMOyKXfvzebWkcp3p1wQOgFblu-D_o4GjXfBaJGgt5j5K6A/exec';
+            
+            // --- UI Elements ---
+            const authContainer = document.getElementById('auth-container');
+            const appContainer = document.getElementById('app-container');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const showRegisterLink = document.getElementById('show-register-link');
+            const showLoginLink = document.getElementById('show-login-link');
+            const logoutBtn = document.getElementById('logout-btn');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page-content');
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const loadingModal = document.getElementById('loading-modal');
+            const addPartForm = document.getElementById('add-part-form');
+            const stockListBody = document.getElementById('stock-list-body');
+            const stockSearch = document.getElementById('stock-search');
+            const categoryFilter = document.getElementById('category-filter');
+            const cartBadge = document.getElementById('cart-badge');
+            const cartItemsBody = document.getElementById('cart-items-body');
+            const cartSummary = document.getElementById('cart-summary');
+            const cartView = document.getElementById('cart-view');
+            const cartEmptyMessage = document.getElementById('cart-empty-message');
+            const withdrawForm = document.getElementById('withdraw-form');
+            const managePartsToggle = document.getElementById('manage-parts-toggle');
+            const managePartsSubmenu = document.getElementById('manage-parts-submenu');
+            const managePartsIcon = document.getElementById('manage-parts-icon');
+            const approvalToggle = document.getElementById('approval-toggle');
+            const approvalSubmenu = document.getElementById('approval-submenu');
+            const approvalIcon = document.getElementById('approval-icon');
+            const settingsToggle = document.getElementById('settings-toggle');
+            const settingsSubmenu = document.getElementById('settings-submenu');
+            const settingsIcon = document.getElementById('settings-icon');
+            // Add/Edit Form
+            const partFormTitle = document.getElementById('part-form-title');
+            const submitPartFormBtn = document.getElementById('submit-part-form');
+            const cancelPartFormBtn = document.getElementById('cancel-part-form');
+            const partIdHidden = document.getElementById('part-id-hidden');
+            const partImagePreview = document.getElementById('part-image-preview');
+            const partCodeInput = document.getElementById('part-code');
+            const partUnitSelect = document.getElementById('part-unit');
+            const partUnitOtherInput = document.getElementById('part-unit-other');
+            // Edit Page
+            const editListBody = document.getElementById('edit-list-body');
+            const editStockSearch = document.getElementById('edit-stock-search');
+            // Factory Order
+            const factoryOrderFormTitle = document.getElementById('factory-order-form-title');
+            const factoryOrderSearch = document.getElementById('factory-order-search');
+            const factoryOrderSearchResults = document.getElementById('factory-order-search-results');
+            const factoryOrderBody = document.getElementById('factory-order-body');
+            const factoryOrderForm = document.getElementById('factory-order-form');
+            const factoryOrderEmptyMessage = document.getElementById('factory-order-empty-message');
+            const submitFactoryOrderBtn = document.getElementById('submit-factory-order-btn');
+            // Receive Stock
+            const receiveOrderSelect = document.getElementById('receive-order-select');
+            const receiveItemsContainer = document.getElementById('receive-items-container');
+            const selectedOrderIdSpan = document.getElementById('selected-order-id');
+            const receiveItemsBody = document.getElementById('receive-items-body');
+            // Manage Factory Request
+            const manageRequestListBody = document.getElementById('manage-request-list-body');
+            // Approval Pages & Modal
+            const approvalInternalListBody = document.getElementById('approval-internal-list-body');
+            const approvalFactoryListBody = document.getElementById('approval-factory-list-body');
+            const approvalModal = document.getElementById('approval-modal');
+            const closeApprovalModalBtn = document.getElementById('close-approval-modal');
+            const modalOrderId = document.getElementById('modal-order-id');
+            const modalRequesterName = document.getElementById('modal-requester-name');
+            const modalPurpose = document.getElementById('modal-purpose');
+            const modalItemsBody = document.getElementById('modal-items-body');
+            const modalApproveBtn = document.getElementById('modal-approve-btn');
+            const modalRejectEditBtn = document.getElementById('modal-reject-edit-btn');
+            const modalRejectCancelBtn = document.getElementById('modal-reject-cancel-btn');
+            // Signature Modal Elements
+            const signatureModal = document.getElementById('signature-modal');
+            const signatureModalTitle = document.getElementById('signature-modal-title');
+            const signaturePadCanvas = document.getElementById('signature-pad');
+            const clearSignatureBtn = document.getElementById('clear-signature-btn');
+            const saveSignatureBtn = document.getElementById('save-signature-btn');
+            let signaturePad = null; // Initialize as null
+            // History Page
+            const allHistoryBody = document.getElementById('all-history-body');
+            const topWithdrawnBody = document.getElementById('top-withdrawn-body');
+            // User Management UI Elements
+            const usersListBody = document.getElementById('users-list-body');
+            const addUserBtn = document.getElementById('add-user-btn');
+            const userFormModal = document.getElementById('user-form-modal');
+            const userModalTitle = document.getElementById('user-modal-title');
+            const closeUserModalBtn = document.getElementById('close-user-modal-btn');
+            const userForm = document.getElementById('user-form');
+            const userIdHidden = document.getElementById('user-id-hidden');
+            const userCanApproveCheckbox = document.getElementById('user-can-approve');
+            const userApprovalRightsContainer = document.getElementById('user-approval-rights-container');
+            // General Settings
+            const generalSettingsForm = document.getElementById('general-settings-form');
+            
+            // --- Initial Setup ---
+            lucide.createIcons();
+            
+            // --- State ---
+            let allStockData = [];
+            let allUsers = [];
+            let allFactoryOrders = [];
+            let allInternalOrders = [];
+            let cart = [];
+            let factoryOrder = [];
+            let isEditMode = false;
+            let isFactoryOrderEditMode = false;
+            let signatureCallback = null;
+            let CURRENT_USER = null;
+            const ORDER_ITEM_LIMIT = 20;
+
+            // --- Helper Functions ---
+            const showLoading = (show) => loadingModal.classList.toggle('hidden', !show);
+            const showPage = (pageId) => {
+                pages.forEach(page => page.classList.add('hidden'));
+                document.getElementById(pageId + '-page')?.classList.remove('hidden');
+            };
+            const setActiveLink = (activeLink) => {
+                navLinks.forEach(link => link.classList.remove('active'));
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                    const parentMenu = activeLink.closest('.submenu-link')?.parentElement.parentElement;
+                    if (parentMenu) {
+                        parentMenu.previousElementSibling.classList.add('active');
+                    }
+                }
+            };
+            
+            const fetchFromScript = async (action, payload = {}) => {
+                showLoading(true);
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action, ...payload, user: CURRENT_USER }) // Send current user info
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const result = await response.json();
+                    if (result.status === 'error') throw new Error(result.message);
+                    return result.data;
+                } catch (error) {
+                    console.error('Fetch Error:', error);
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message, confirmButtonColor: '#0891b2' });
+                    return null;
+                } finally {
+                    showLoading(false);
+                }
+            };
+            
+            // --- Signature Modal Functions ---
+            const openSignatureModal = (title, callback) => {
+                if (!signaturePad) { // Initialize SignaturePad only when needed
+                    signaturePad = new SignaturePad(signaturePadCanvas);
+                }
+                signatureModalTitle.textContent = title;
+                signaturePad.clear();
+                signatureCallback = callback;
+                signatureModal.classList.remove('hidden');
+            };
+
+            const closeSignatureModal = () => {
+                signatureModal.classList.add('hidden');
+                signatureCallback = null;
+            };
+
+            // --- Cart Functions ---
+            const updateCartBadge = () => {
+                if (cart.length > 0) {
+                    cartBadge.textContent = cart.length;
+                    cartBadge.classList.remove('hidden');
+                } else {
+                    cartBadge.classList.add('hidden');
+                }
+            };
+
+            const handleAddToCart = async (partId) => {
+                const part = allStockData.find(p => p.id === partId);
+                if (!part) return;
+
+                const existingItem = cart.find(item => item.id === partId);
+                if (!existingItem && cart.length >= ORDER_ITEM_LIMIT) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: `จำกัด ${ORDER_ITEM_LIMIT} รายการ`,
+                        text: `ไม่สามารถเพิ่มรายการเกิน ${ORDER_ITEM_LIMIT} รายการต่อหนึ่งใบเบิกได้`,
+                        confirmButtonColor: '#0891b2'
+                    });
+                    return;
+                }
+
+                const { value: quantity } = await Swal.fire({
+                    title: `เบิก: ${part.name}`, text: `คงเหลือ: ${part.quantity} ${part.unit}`, input: 'number',
+                    inputLabel: 'ระบุจำนวนที่ต้องการเบิก', inputPlaceholder: 'ใส่จำนวน',
+                    confirmButtonText: 'เพิ่มลงตะกร้า', confirmButtonColor: '#0891b2',
+                    showCancelButton: true, cancelButtonText: 'ยกเลิก',
+                    inputValidator: (value) => {
+                        if (!value || value <= 0) return 'กรุณาระบุจำนวนที่ถูกต้อง';
+                        if (value > part.quantity) return `จำนวนเบิกต้องไม่เกินสต็อกคงเหลือ (${part.quantity})`;
+                    }
+                });
+
+                if (quantity) {
+                    const numQuantity = parseInt(quantity, 10);
+                    if (existingItem) {
+                        existingItem.withdrawQuantity += numQuantity;
+                    } else {
+                        cart.push({ ...part, withdrawQuantity: numQuantity });
+                    }
+                    updateCartBadge();
+                    Swal.fire({ icon: 'success', title: 'เพิ่มลงตะกร้าแล้ว', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+                }
+            };
+
+            // --- Page Loading and Rendering ---
+            const renderStockList = (data) => {
+                stockListBody.innerHTML = '';
+                if (!data || data.length === 0) {
+                    stockListBody.innerHTML = `<tr><td colspan="9" class="text-center p-4 text-gray-500">ไม่พบข้อมูลอะไหล่</td></tr>`;
+                    return;
+                }
+                data.forEach(item => {
+                    const status = item.quantity <= item.min_stock ? `<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">ใกล้หมด</span>` : `<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">ปกติ</span>`;
+                    const priceFormatted = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(item.price || 0);
+                    const row = `<tr class="border-b hover:bg-gray-50"><td class="p-3"><img src="${item.image_url || 'https://placehold.co/60x60/e0e0e0/777?text=N/A'}" alt="${item.name}" class="w-12 h-12 object-cover rounded-md"></td><td class="p-3 font-mono text-sm text-gray-600">${item.id}</td><td class="p-3 font-semibold text-gray-800">${item.name}</td><td class="p-3 text-gray-600">${item.category}</td><td class="p-3 text-right">${priceFormatted}</td><td class="p-3 font-bold text-lg ${item.quantity <= item.min_stock ? 'text-red-600' : 'text-gray-800'}">${item.quantity}</td><td class="p-3 text-gray-600">${item.unit || '-'}</td><td class="p-3">${status}</td><td class="p-3 text-center"><button class="add-to-cart-btn p-2 text-white bg-cyan-600 rounded-lg hover:bg-cyan-700" title="เพิ่มลงตะกร้า" data-id="${item.id}"><i data-lucide="shopping-cart" class="h-4 w-4 pointer-events-none"></i></button></td></tr>`;
+                    stockListBody.insertAdjacentHTML('beforeend', row);
+                });
+                lucide.createIcons();
+            };
+
+            const loadStockList = async () => {
+                const data = await fetchFromScript('getStockList');
+                if (data) {
+                    allStockData = data;
+                    populateCategoryFilter(data);
+                    renderStockList(data);
+                }
+            };
+            
+            const loadWithdrawRequestPage = async () => {
+                const formContainer = withdrawForm;
+                const itemsContainer = formContainer.querySelector('#withdraw-items-container');
+                const emptyMessageContainer = itemsContainer.querySelector('#cart-empty-message');
+                
+                cartItemsBody.innerHTML = '';
+
+                if (cart.length === 0) {
+                    emptyMessageContainer.classList.remove('hidden');
+                    itemsContainer.querySelector('table').classList.add('hidden');
+                } else {
+                    emptyMessageContainer.classList.add('hidden');
+                    itemsContainer.querySelector('table').classList.remove('hidden');
+
+                    cart.forEach((item, index) => {
+                        const row = `<tr class="border-b">
+                                        <td class="p-3 font-semibold">${item.id} / ${item.name}</td>
+                                        <td class="p-3 text-center">${item.unit || '-'}</td>
+                                        <td class="p-3 text-center font-semibold">${item.withdrawQuantity}</td>
+                                        <td class="p-3 text-center"><button class="remove-from-cart-btn p-2 text-red-500 hover:text-red-700" title="ลบรายการ" data-index="${index}"><i data-lucide="trash-2" class="h-4 w-4 pointer-events-none"></i></button></td>
+                                      </tr>`;
+                        cartItemsBody.insertAdjacentHTML('beforeend', row);
+                    });
+                }
+
+                const orderId = await fetchFromScript('generateOrderId', { prefix: 'LDT-A' });
+                if(orderId) {
+                    document.getElementById('withdraw-order-id').value = orderId;
+                }
+                document.getElementById('requester-name').value = CURRENT_USER.fullName;
+                document.getElementById('requester-agency').value = CURRENT_USER.agency;
+                document.getElementById('requester-department').value = CURRENT_USER.department;
+                document.getElementById('requester-bu').value = CURRENT_USER.businessCenter;
+
+                lucide.createIcons();
+            };
+            
+            // --- Factory Order Functions ---
+            const renderFactoryOrder = () => {
+                factoryOrderBody.innerHTML = '';
+                if (factoryOrder.length === 0) {
+                    factoryOrderEmptyMessage.classList.remove('hidden');
+                    submitFactoryOrderBtn.disabled = true;
+                } else {
+                    factoryOrderEmptyMessage.classList.add('hidden');
+                    submitFactoryOrderBtn.disabled = false;
+                }
+
+                if (factoryOrder.length >= ORDER_ITEM_LIMIT) {
+                    factoryOrderSearch.disabled = true;
+                    factoryOrderSearch.placeholder = `เพิ่มได้สูงสุด ${ORDER_ITEM_LIMIT} รายการ`;
+                } else {
+                    factoryOrderSearch.disabled = false;
+                    factoryOrderSearch.placeholder = '🔍 ค้นหาด้วยรหัสหรือชื่ออะไหล่...';
+                }
+
+                factoryOrder.forEach((item, index) => {
+                    const row = `
+                        <tr class="border-b">
+                            <td class="p-3">
+                                <p class="font-semibold">${item.name}</p>
+                                <p class="text-xs text-gray-500 font-mono">${item.id}</p>
+                            </td>
+                            <td class="p-3">
+                                <span class="font-bold ${item.quantity <= item.min_stock ? 'text-red-600' : 'text-gray-800'}">${item.quantity}</span> / ${item.min_stock}
+                            </td>
+                            <td class="p-3 text-center text-blue-600 font-semibold">${item.recommendedQty}</td>
+                            <td class="p-3 text-center">
+                                <input type="number" value="${item.orderQty}" min="1" data-index="${index}" class="factory-order-qty-input w-24 p-1 border rounded-md text-center">
+                            </td>
+                            <td class="p-3 text-center">
+                                <button type="button" class="remove-from-factory-order-btn p-2 text-red-500 hover:text-red-700" title="ลบรายการ" data-id="${item.id}">
+                                    <i data-lucide="trash-2" class="h-4 w-4 pointer-events-none"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    factoryOrderBody.insertAdjacentHTML('beforeend', row);
+                });
+                lucide.createIcons();
+            };
+
+            const resetFactoryOrderForm = async () => {
+                isFactoryOrderEditMode = false;
+                factoryOrderForm.reset();
+                factoryOrderFormTitle.textContent = '🏭 ขอเบิกอะไหล่จากโรงงาน';
+                submitFactoryOrderBtn.textContent = 'ส่งใบขอเบิก';
+                factoryOrder = [];
+                const lowStockItems = allStockData.filter(item => item.quantity < item.min_stock);
+
+                lowStockItems.forEach(item => {
+                    if (factoryOrder.length < ORDER_ITEM_LIMIT) {
+                        const recommendedQty = (item.max_stock || item.min_stock) - item.quantity;
+                        factoryOrder.push({ ...item, recommendedQty: recommendedQty > 0 ? recommendedQty : 1, orderQty: recommendedQty > 0 ? recommendedQty : 1 });
+                    }
+                });
+                renderFactoryOrder();
+
+                const orderId = await fetchFromScript('generateOrderId', { prefix: 'LDT-F' });
+                if(orderId) {
+                    document.getElementById('factory-order-id').value = orderId;
+                }
+                document.getElementById('factory-requester-name').value = CURRENT_USER.fullName;
+                document.getElementById('factory-requester-agency').value = CURRENT_USER.agency;
+                document.getElementById('factory-requester-department').value = CURRENT_USER.department;
+                document.getElementById('factory-requester-bu').value = CURRENT_USER.businessCenter;
+            };
+
+            const setupFactoryOrderForEdit = async (orderId) => {
+                const allOrders = await fetchFromScript('getFactoryOrders');
+                const orderToEdit = allOrders.find(o => o.orderId === orderId);
+                if (!orderToEdit) return;
+
+                // Set status to 'Editing'
+                orderToEdit.originalStatus = orderToEdit.status;
+                orderToEdit.status = 'Editing';
+
+                isFactoryOrderEditMode = true;
+                factoryOrderForm.reset();
+                factoryOrderFormTitle.textContent = '✏️ แก้ไขใบขอเบิกจากโรงงาน';
+                submitFactoryOrderBtn.textContent = 'บันทึกการแก้ไข';
+
+                document.getElementById('factory-order-id').value = orderToEdit.orderId;
+                document.getElementById('factory-requester-name').value = orderToEdit.requester.fullName;
+                document.getElementById('factory-requester-agency').value = orderToEdit.requester.agency;
+                document.getElementById('factory-requester-department').value = orderToEdit.requester.department;
+                document.getElementById('factory-requester-bu').value = orderToEdit.requester.businessCenter;
+                document.getElementById('factory-order-purpose').value = orderToEdit.purpose;
+
+                factoryOrder = orderToEdit.items.map(item => {
+                    const stockItem = allStockData.find(s => s.id === item.id) || {};
+                    return { ...stockItem, ...item, orderQty: item.orderedQty, recommendedQty: 0 };
+                });
+                
+                renderFactoryOrder();
+                showPage('request-factory');
+            };
+            
+            // --- Receive Stock Page Functions ---
+            const loadReceiveStockPage = async () => {
+                const openOrders = await fetchFromScript('getOpenFactoryOrders');
+                receiveOrderSelect.innerHTML = '<option value="">-- กรุณาเลือกใบสั่งซื้อ --</option>';
+                if (openOrders && openOrders.length > 0) {
+                    openOrders.forEach(order => {
+                        const option = document.createElement('option');
+                        option.value = order.orderId;
+                        option.textContent = `${order.orderId} - ${order.purpose}`;
+                        receiveOrderSelect.appendChild(option);
+                    });
+                }
+                receiveItemsContainer.classList.add('hidden');
+            };
+
+            const renderReceiveItems = async (orderId) => {
+                const allOrders = await fetchFromScript('getFactoryOrders');
+                const order = allOrders.find(o => o.orderId === orderId);
+                if (!order) {
+                    receiveItemsContainer.classList.add('hidden');
+                    return;
+                };
+
+                selectedOrderIdSpan.textContent = order.orderId;
+                receiveItemsBody.innerHTML = '';
+                
+                const itemsWithOutstanding = order.items.filter(item => item.orderedQty > item.receivedQty);
+
+                if (itemsWithOutstanding.length === 0) {
+                    receiveItemsBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-green-600">รับสินค้าครบทุกรายการแล้วสำหรับใบสั่งซื้อนี้</td></tr>`;
+                } else {
+                    itemsWithOutstanding.forEach(item => {
+                        const outstanding = item.orderedQty - item.receivedQty;
+                        const row = document.createElement('tr');
+                        row.className = 'border-b';
+                        row.innerHTML = `
+                            <td class="p-3">
+                                <p class="font-semibold">${item.name}</p>
+                                <p class="text-xs text-gray-500 font-mono">${item.id}</p>
+                            </td>
+                            <td class="p-3 text-center">${item.orderedQty}</td>
+                            <td class="p-3 text-center text-green-600">${item.receivedQty}</td>
+                            <td class="p-3 text-center font-semibold text-orange-600">
+                                <span class="outstanding-qty">${outstanding}</span>
+                            </td>
+                            <td class="p-3 text-center">
+                                <input type="number" value="0" min="0" max="${outstanding}" data-part-id="${item.id}" class="receive-qty-input w-24 p-1 border rounded-md text-center">
+                            </td>
+                            <td class="p-3 text-center">
+                                <button type="button" class="save-receive-item-btn p-2 text-white bg-cyan-600 rounded-lg hover:bg-cyan-700" title="บันทึกรายการนี้">
+                                    <i data-lucide="save" class="h-4 w-4 pointer-events-none"></i>
+                                </button>
+                            </td>
+                        `;
+                        receiveItemsBody.appendChild(row);
+                    });
+                }
+                receiveItemsContainer.classList.remove('hidden');
+                lucide.createIcons();
+            };
+
+            // --- Manage & Approval Page Functions ---
+            const getStatusBadge = (status) => {
+                switch (status) {
+                    case 'Pending': return `<span class="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">รอดำเนินการ</span>`;
+                    case 'Approved': return `<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">อนุมัติแล้ว</span>`;
+                    case 'Rejected': return `<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">ตีกลับ</span>`;
+                    case 'Editing': return `<span class="px-2 py-1 text-xs font-semibold text-purple-800 bg-purple-100 rounded-full">กำลังแก้ไข</span>`;
+                    case 'Cancelled': return `<span class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded-full">ไม่อนุมัติ</span>`;
+                    default: return `<span class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">${status}</span>`;
+                }
+            };
+
+            const loadManageFactoryRequestPage = async () => {
+                const orders = await fetchFromScript('getFactoryOrders');
+                manageRequestListBody.innerHTML = '';
+                if (orders && orders.length > 0) {
+                    orders.forEach(order => {
+                        const row = document.createElement('tr');
+                        row.className = 'border-b hover:bg-gray-50';
+                        let actionsHtml = '';
+                        if (order.status === 'Pending' || order.status === 'Rejected') {
+                            actionsHtml = `
+                                <button class="edit-factory-order-btn p-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700" title="แก้ไข" data-id="${order.orderId}">
+                                    <i data-lucide="edit" class="h-4 w-4 pointer-events-none"></i>
+                                </button>
+                                <button class="delete-factory-order-btn p-2 text-white bg-red-600 rounded-lg hover:bg-red-700" title="ลบ" data-id="${order.orderId}">
+                                    <i data-lucide="trash-2" class="h-4 w-4 pointer-events-none"></i>
+                                </button>
+                            `;
+                        }
+                        row.innerHTML = `
+                            <td class="p-3 font-mono text-sm">${order.orderId}</td>
+                            <td class="p-3">${order.purpose}</td>
+                            <td class="p-3 text-center">${getStatusBadge(order.status)}</td>
+                            <td class="p-3 text-center space-x-2">${actionsHtml}</td>
+                        `;
+                        manageRequestListBody.appendChild(row);
+                    });
+                    lucide.createIcons();
+                } else {
+                    manageRequestListBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">ไม่พบข้อมูลใบขอเบิก</td></tr>`;
+                }
+            };
+
+            const renderApprovalList = async (listBody, orderType) => {
+                const action = orderType === 'factory' ? 'getFactoryOrders' : 'getInternalOrders';
+                const orders = await fetchFromScript(action);
+                listBody.innerHTML = '';
+                 if (orders && orders.length > 0) {
+                    orders.forEach(order => {
+                        const row = document.createElement('tr');
+                        row.className = 'border-b hover:bg-gray-50';
+                        const actionsHtml = `
+                            <button class="view-approval-btn p-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700" title="ดูรายละเอียด" data-id="${order.orderId}" data-type="${orderType}">
+                                <i data-lucide="eye" class="h-4 w-4 pointer-events-none"></i>
+                            </button>
+                        `;
+                        row.innerHTML = `
+                            <td class="p-3 font-mono text-sm">${order.orderId}</td>
+                            <td class="p-3">${order.requester.fullName}</td>
+                            <td class="p-3">${order.purpose}</td>
+                            <td class="p-3 text-center">${getStatusBadge(order.status)}</td>
+                            <td class="p-3 text-center space-x-2">${actionsHtml}</td>
+                        `;
+                        listBody.appendChild(row);
+                    });
+                    lucide.createIcons();
+                } else {
+                    listBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">ไม่มีรายการรออนุมัติ</td></tr>`;
+                }
+            };
+            
+            const showApprovalModal = async (orderId, orderType) => {
+                const action = orderType === 'factory' ? 'getFactoryOrders' : 'getInternalOrders';
+                const allOrders = await fetchFromScript(action);
+                const orderData = allOrders.find(o => o.orderId === orderId);
+                
+                if (!orderData) return;
+
+                modalOrderId.textContent = orderData.orderId;
+                modalRequesterName.textContent = orderData.requester.fullName;
+                modalPurpose.textContent = orderData.purpose;
+                modalItemsBody.innerHTML = '';
+
+                orderData.items.forEach(item => {
+                    const row = `<tr class="border-b"><td class="p-2">${item.id}</td><td class="p-2">${item.name}</td><td class="p-2 text-center">${item.orderedQty || item.withdrawQuantity}</td></tr>`;
+                    modalItemsBody.insertAdjacentHTML('beforeend', row);
+                });
+
+                // Display Signatures
+                const requesterSigImg = document.getElementById('modal-requester-signature-img');
+                const requesterSigNone = document.getElementById('modal-requester-signature-none');
+                if (orderData.requesterSignature) {
+                    requesterSigImg.src = orderData.requesterSignature;
+                    requesterSigImg.classList.remove('hidden');
+                    requesterSigNone.classList.add('hidden');
+                } else {
+                    requesterSigImg.classList.add('hidden');
+                    requesterSigNone.classList.remove('hidden');
+                }
+                const approverSigImg = document.getElementById('modal-approver-signature-img');
+                const approverSigNone = document.getElementById('modal-approver-signature-none');
+                if (orderData.approverSignature) {
+                    approverSigImg.src = orderData.approverSignature;
+                    approverSigImg.classList.remove('hidden');
+                    approverSigNone.classList.add('hidden');
+                } else {
+                    approverSigImg.classList.add('hidden');
+                    approverSigNone.classList.remove('hidden');
+                }
+
+                // Show/Hide action buttons based on status
+                const actionButtons = document.getElementById('modal-action-buttons');
+                if (orderData.status === 'Pending') {
+                    actionButtons.classList.remove('hidden');
+                } else {
+                    actionButtons.classList.add('hidden');
+                }
+
+                modalApproveBtn.dataset.id = orderId;
+                modalApproveBtn.dataset.type = orderType;
+                modalRejectEditBtn.dataset.id = orderId;
+                modalRejectEditBtn.dataset.type = orderType;
+                modalRejectCancelBtn.dataset.id = orderId;
+                modalRejectCancelBtn.dataset.type = orderType;
+
+                approvalModal.classList.remove('hidden');
+            };
+
+            const processApprovalWithSignature = (orderId, orderType, newStatus) => {
+                openSignatureModal('ลงลายเซ็นผู้อนุมัติ', async (signatureData) => {
+                    await fetchFromScript('processApproval', { orderId, status: newStatus, signature: signatureData, type: orderType });
+                    Swal.fire('สำเร็จ!', `ดำเนินการใบเบิก ${orderId} เรียบร้อยแล้ว`, 'success');
+                    closeSignatureModal();
+                    approvalModal.classList.add('hidden');
+                    
+                    if (orderType === 'factory') {
+                        renderApprovalList(approvalFactoryListBody, 'factory');
+                    } else {
+                        renderApprovalList(approvalInternalListBody, 'internal');
+                    }
+                });
+            };
+
+            // --- History Page Functions ---
+            const loadHistoryPage = async () => {
+                const factoryHistory = await fetchFromScript('getFactoryOrders');
+                const internalHistory = await fetchFromScript('getInternalOrders');
+                
+                const allHistory = [
+                    ...factoryHistory.map(o => ({...o, type: 'เบิกจากโรงงาน'})),
+                    ...internalHistory.map(o => ({...o, type: 'เบิกภายใน'}))
+                ].sort((a,b) => (b.approvalTimestamp || 0) - (a.approvalTimestamp || 0)); // Sort by date if available
+
+                allHistoryBody.innerHTML = '';
+                allHistory.forEach(order => {
+                    const row = `
+                        <tr class="border-b">
+                            <td class="p-2 font-mono text-sm">${order.orderId}</td>
+                            <td class="p-2">${order.type}</td>
+                            <td class="p-2 text-center">${getStatusBadge(order.status)}</td>
+                        </tr>
+                    `;
+                    allHistoryBody.insertAdjacentHTML('beforeend', row);
+                });
+
+                // Calculate Top Withdrawn Items
+                const withdrawalCounts = {};
+                const approvedOrders = allHistory.filter(o => o.status === 'Approved');
+                approvedOrders.forEach(order => {
+                    order.items.forEach(item => {
+                        const qty = item.orderedQty || item.withdrawQuantity;
+                        if(withdrawalCounts[item.id]) {
+                            withdrawalCounts[item.id].totalQty += qty;
+                        } else {
+                            withdrawalCounts[item.id] = {
+                                name: item.name,
+                                totalQty: qty
+                            };
+                        }
+                    });
+                });
+
+                const sortedItems = Object.entries(withdrawalCounts)
+                    .map(([id, data]) => ({ id, ...data }))
+                    .sort((a, b) => b.totalQty - a.totalQty)
+                    .slice(0, 10); // Get top 10
+
+                topWithdrawnBody.innerHTML = '';
+                sortedItems.forEach((item, index) => {
+                    const row = `
+                         <tr class="border-b">
+                            <td class="p-2 text-center font-semibold">${index + 1}</td>
+                            <td class="p-2">${item.name} <span class="text-xs text-gray-500">(${item.id})</span></td>
+                            <td class="p-2 text-center font-bold">${item.totalQty}</td>
+                        </tr>
+                    `;
+                    topWithdrawnBody.insertAdjacentHTML('beforeend', row);
+                });
+            };
+
+
+            const populateCategoryFilter = (data) => {
+                const categories = [...new Set(data.map(item => item.category))];
+                categoryFilter.innerHTML = '<option value="">ทุกหมวดหมู่</option>';
+                categories.forEach(cat => categoryFilter.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`));
+            };
+
+            const filterAndSearchStock = () => {
+                const searchTerm = stockSearch.value.toLowerCase();
+                const selectedCategory = categoryFilter.value;
+                const filteredData = allStockData.filter(item => (item.name.toLowerCase().includes(searchTerm) || item.id.toLowerCase().includes(searchTerm)) && (selectedCategory ? item.category === selectedCategory : true));
+                renderStockList(filteredData);
+            };
+
+            // --- Edit Part Page Functions ---
+            const renderEditList = (data) => {
+                editListBody.innerHTML = '';
+                 if (!data || data.length === 0) {
+                    editListBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">ไม่พบข้อมูลอะไหล่</td></tr>`;
+                    return;
+                }
+                data.forEach(item => {
+                    const priceFormatted = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(item.price || 0);
+                    const row = `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3"><img src="${item.image_url || 'https://placehold.co/60x60/e0e0e0/777?text=N/A'}" alt="${item.name}" class="w-12 h-12 object-cover rounded-md"></td>
+                            <td class="p-3 font-mono text-sm text-gray-600">${item.id}</td>
+                            <td class="p-3 font-semibold text-gray-800">${item.name}</td>
+                            <td class="p-3 text-right">${priceFormatted}</td>
+                            <td class="p-3 font-bold text-lg">${item.quantity}</td>
+                            <td class="p-3 text-center space-x-2">
+                                <button class="edit-part-btn p-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700" title="แก้ไข" data-id="${item.id}">
+                                    <i data-lucide="edit" class="h-4 w-4 pointer-events-none"></i>
+                                </button>
+                                <button class="delete-part-btn p-2 text-white bg-red-600 rounded-lg hover:bg-red-700" title="ลบ" data-id="${item.id}">
+                                    <i data-lucide="trash-2" class="h-4 w-4 pointer-events-none"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                    editListBody.insertAdjacentHTML('beforeend', row);
+                });
+                lucide.createIcons();
+            };
+            
+            const loadEditPartPage = async () => {
+                // Data is already loaded from allStockData, just need to render
+                renderEditList(allStockData);
+            };
+
+            const filterEditList = () => {
+                const searchTerm = editStockSearch.value.toLowerCase();
+                const filteredData = allStockData.filter(item => 
+                    item.name.toLowerCase().includes(searchTerm) || item.id.toLowerCase().includes(searchTerm)
+                );
+                renderEditList(filteredData);
+            };
+
+            const setupPartFormForEdit = (part) => {
+                isEditMode = true;
+                addPartForm.reset();
+                partFormTitle.textContent = '✏️ แก้ไขข้อมูลอะไหล่';
+                submitPartFormBtn.textContent = 'บันทึกการแก้ไข';
+                
+                partIdHidden.value = part.id;
+                partCodeInput.value = part.id;
+                partCodeInput.disabled = true; // Prevent editing ID
+                document.getElementById('part-name').value = part.name;
+                document.getElementById('part-category').value = part.category;
+                document.getElementById('part-price').value = part.price;
+                document.getElementById('part-quantity').value = part.quantity;
+                document.getElementById('part-min').value = part.min_stock;
+                document.getElementById('part-max').value = part.max_stock;
+                
+                partImagePreview.src = part.image_url || '';
+                partImagePreview.classList.toggle('hidden', !part.image_url);
+
+                // Handle unit dropdown
+                const unitOptions = Array.from(partUnitSelect.options).map(opt => opt.value);
+                if (unitOptions.includes(part.unit)) {
+                    partUnitSelect.value = part.unit;
+                    partUnitOtherInput.classList.add('hidden');
+                    partUnitOtherInput.required = false;
+                } else {
+                    partUnitSelect.value = 'other';
+                    partUnitOtherInput.value = part.unit;
+                    partUnitOtherInput.classList.remove('hidden');
+                    partUnitOtherInput.required = true;
+                }
+
+                showPage('add-part');
+            };
+
+            const resetPartForm = () => {
+                isEditMode = false;
+                addPartForm.reset();
+                partFormTitle.textContent = '➕ เพิ่มอะไหล่ใหม่';
+                submitPartFormBtn.textContent = 'บันทึก';
+                partIdHidden.value = '';
+                partCodeInput.disabled = false;
+                partImagePreview.classList.add('hidden');
+                partImagePreview.src = '';
+                partUnitOtherInput.classList.add('hidden');
+                partUnitOtherInput.required = false;
+            };
+
+            // --- User Management Functions ---
+            const renderUserList = async () => {
+                const users = await fetchFromScript('getUsers');
+                if (!users) return;
+                allUsers = users;
+
+                usersListBody.innerHTML = '';
+                users.forEach(user => {
+                    let approvalText = '<i data-lucide="x-circle" class="text-red-500 mx-auto"></i>';
+                    if (user.canApprove) {
+                        const rights = [];
+                        if (user.approvalRights.internal) rights.push('ภายใน');
+                        if (user.approvalRights.factory) rights.push('โรงงาน');
+                        approvalText = `<div class="flex items-center justify-center gap-1">
+                                            <i data-lucide="check-circle-2" class="text-green-500"></i>
+                                            <span class="text-xs">${rights.join(', ')}</span>
+                                      </div>`;
+                    }
+                    const row = `
+                        <tr class="border-b">
+                            <td class="p-3 font-semibold">${user.fullName}</td>
+                            <td class="p-3 text-gray-600">${user.email}</td>
+                            <td class="p-3 text-gray-600">${user.phone || ''}</td>
+                            <td class="p-3 text-gray-600">${user.agency || ''}</td>
+                            <td class="p-3 text-gray-600">${user.department || ''}</td>
+                            <td class="p-3 text-center"><span class="px-2 py-1 text-xs font-semibold text-cyan-800 bg-cyan-100 rounded-full">${user.role}</span></td>
+                            <td class="p-3">${approvalText}</td>
+                            <td class="p-3 text-center space-x-2">
+                                <button class="edit-user-btn p-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700" title="แก้ไข" data-id="${user.id}">
+                                    <i data-lucide="edit" class="h-4 w-4 pointer-events-none"></i>
+                                </button>
+                                <button class="delete-user-btn p-2 text-white bg-red-600 rounded-lg hover:bg-red-700" title="ลบ" data-id="${user.id}">
+                                    <i data-lucide="trash-2" class="h-4 w-4 pointer-events-none"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    usersListBody.insertAdjacentHTML('beforeend', row);
+                });
+                lucide.createIcons();
+            };
+            
+            const loadUsersPage = () => {
+                renderUserList();
+            };
+            
+            const openUserModal = (user = null) => {
+                userForm.reset();
+                if (user) {
+                    userModalTitle.textContent = 'แก้ไขข้อมูลผู้ใช้';
+                    userIdHidden.value = user.id;
+                    document.getElementById('user-fullname').value = user.fullName;
+                    document.getElementById('user-email').value = user.email;
+                    document.getElementById('user-phone').value = user.phone;
+                    document.getElementById('user-agency').value = user.agency;
+                    document.getElementById('user-department').value = user.department;
+                    document.getElementById('user-bu').value = user.businessCenter;
+                    document.getElementById('user-role').value = user.role;
+                    userCanApproveCheckbox.checked = user.canApprove;
+                    document.getElementById('user-approve-internal').checked = user.approvalRights.internal;
+                    document.getElementById('user-approve-factory').checked = user.approvalRights.factory;
+                } else {
+                    userModalTitle.textContent = 'เพิ่มผู้ใช้ใหม่';
+                    userIdHidden.value = '';
+                }
+                userApprovalRightsContainer.classList.toggle('hidden', !userCanApproveCheckbox.checked);
+                userFormModal.classList.remove('hidden');
+            };
+
+            // --- Event Listeners ---
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const pageId = link.dataset.page;
+                    if (!pageId) return;
+                    setActiveLink(link);
+                    showPage(pageId);
+                    if (pageId === 'add-part') resetPartForm();
+                    if (pageId === 'stock-list') loadStockList();
+                    if (pageId === 'edit-part') loadEditPartPage();
+                    if (pageId === 'withdraw-request') loadWithdrawRequestPage();
+                    if (pageId === 'request-factory') resetFactoryOrderForm();
+                    if (pageId === 'receive-stock') loadReceiveStockPage();
+                    if (pageId === 'manage-factory-request') loadManageFactoryRequestPage();
+                    if (pageId === 'approval-internal') renderApprovalList(approvalInternalListBody, 'internal');
+                    if (pageId === 'approval-factory') renderApprovalList(approvalFactoryListBody, 'factory');
+                    if (pageId === 'history') loadHistoryPage();
+                    if (pageId === 'users') loadUsersPage();
+                    if (pageId === 'general-settings') loadGeneralSettingsPage();
+                    if (window.innerWidth < 768) sidebar.classList.add('-translate-x-full');
+                });
+            });
+
+            managePartsToggle.addEventListener('click', () => {
+                managePartsSubmenu.classList.toggle('hidden');
+                managePartsIcon.classList.toggle('rotate-180');
+            });
+            
+            approvalToggle.addEventListener('click', () => {
+                approvalSubmenu.classList.toggle('hidden');
+                approvalIcon.classList.toggle('rotate-180');
+            });
+            
+            settingsToggle.addEventListener('click', () => {
+                settingsSubmenu.classList.toggle('hidden');
+                settingsIcon.classList.toggle('rotate-180');
+            });
+
+            partUnitSelect.addEventListener('change', () => {
+                partUnitOtherInput.classList.toggle('hidden', partUnitSelect.value !== 'other');
+                partUnitOtherInput.required = partUnitSelect.value === 'other';
+                if (partUnitSelect.value !== 'other') partUnitOtherInput.value = '';
+            });
+
+            addPartForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const imageFile = document.getElementById('part-image').files[0];
+                if (imageFile && !['image/jpeg', 'image/png'].includes(imageFile.type)) {
+                    Swal.fire({ icon: 'error', title: 'รูปแบบไฟล์ไม่ถูกต้อง', text: 'กรุณาอัปโหลดไฟล์รูปภาพนามสกุล .jpg หรือ .png เท่านั้น', confirmButtonColor: '#0891b2' });
+                    return;
+                }
+                
+                let unitValue = partUnitSelect.value === 'other' ? partUnitOtherInput.value.trim() : partUnitSelect.value;
+                if (partUnitSelect.value === 'other' && !unitValue) {
+                    Swal.fire('ข้อผิดพลาด', 'กรุณาระบุหน่วยนับ', 'error');
+                    return;
+                }
+                const partData = {
+                    id: isEditMode ? partIdHidden.value : document.getElementById('part-code').value,
+                    name: document.getElementById('part-name').value,
+                    category: document.getElementById('part-category').value, price: document.getElementById('part-price').value,
+                    unit: unitValue, quantity: document.getElementById('part-quantity').value,
+                    min_stock: document.getElementById('part-min').value, max_stock: document.getElementById('part-max').value,
+                };
+                
+                const action = isEditMode ? 'updatePart' : 'addPart';
+                const successMessage = isEditMode ? 'แก้ไขข้อมูลสำเร็จ!' : 'เพิ่มอะไหล่ใหม่เรียบร้อยแล้ว';
+                
+                const handleSuccess = (result) => {
+                    Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: successMessage, timer: 2000, showConfirmButton: false });
+                    resetPartForm();
+                    loadStockList().then(() => { // Reload all data
+                        document.querySelector('.nav-link[data-page="edit-part"]').click(); // Go back to edit list
+                    });
+                };
+
+                if (imageFile) {
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const base64String = reader.result.replace('data:', '').replace(/^.+,/, '');
+                        const fileData = { base64: base64String, type: imageFile.type, name: imageFile.name };
+                        const result = await fetchFromScript(action, { ...partData, image: fileData });
+                        if(result) handleSuccess(result);
+                    };
+                    reader.readAsDataURL(imageFile);
+                } else {
+                    const result = await fetchFromScript(action, partData);
+                    if(result) handleSuccess(result);
+                }
+            });
+
+            cancelPartFormBtn.addEventListener('click', () => {
+                if (isFactoryOrderEditMode) {
+                    const orderId = document.getElementById('factory-order-id').value;
+                    const order = allFactoryOrders.find(o => o.orderId === orderId);
+                    if (order && order.originalStatus) {
+                        order.status = order.originalStatus;
+                        delete order.originalStatus;
+                    }
+                    document.querySelector('.nav-link[data-page="manage-factory-request"]').click();
+                } else if (isEditMode) {
+                    document.querySelector('.nav-link[data-page="edit-part"]').click();
+                } else {
+                    document.querySelector('.nav-link[data-page="dashboard"]').click();
+                }
+                resetPartForm();
+            });
+
+            editListBody.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-part-btn');
+                const deleteBtn = e.target.closest('.delete-part-btn');
+
+                if (editBtn) {
+                    const partId = editBtn.dataset.id;
+                    const partToEdit = allStockData.find(p => p.id === partId);
+                    if (partToEdit) {
+                        setupPartFormForEdit(partToEdit);
+                    }
+                }
+
+                if (deleteBtn) {
+                    const partId = deleteBtn.dataset.id;
+                    const partToDelete = allStockData.find(p => p.id === partId);
+                    Swal.fire({
+                        title: `คุณแน่ใจหรือไม่?`,
+                        text: `คุณต้องการลบ "${partToDelete.name}" ออกจากระบบใช่ไหม?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'ใช่, ลบเลย!',
+                        cancelButtonText: 'ยกเลิก'
+                    }).then(async (result) => {
+                        if (result.isConfirmed) {
+                            const deleteResult = await fetchFromScript('deletePart', { id: partId });
+                            if (deleteResult) {
+                                Swal.fire('ลบสำเร็จ!', 'อะไหล่ถูกลบออกจากระบบแล้ว', 'success');
+                                loadStockList().then(() => loadEditPartPage()); // Reload data and refresh view
+                            }
+                        }
+                    });
+                }
+            });
+            editStockSearch.addEventListener('input', filterEditList);
+
+            // --- Factory Order Event Listeners ---
+            factoryOrderSearch.addEventListener('input', () => {
+                const searchTerm = factoryOrderSearch.value.toLowerCase();
+                factoryOrderSearchResults.innerHTML = '';
+                if (!searchTerm) return;
+
+                const results = allStockData.filter(item => 
+                    !factoryOrder.some(orderItem => orderItem.id === item.id) &&
+                    (item.name.toLowerCase().includes(searchTerm) || item.id.toLowerCase().includes(searchTerm))
+                );
+
+                if (results.length > 0) {
+                    results.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'p-2 hover:bg-cyan-100 cursor-pointer';
+                        div.textContent = `${item.name} (${item.id})`;
+                        div.dataset.id = item.id;
+                        div.addEventListener('click', () => {
+                            if (factoryOrder.length >= ORDER_ITEM_LIMIT) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: `จำกัด ${ORDER_ITEM_LIMIT} รายการ`,
+                                    text: `ไม่สามารถเพิ่มรายการเกิน ${ORDER_ITEM_LIMIT} รายการต่อหนึ่งใบขอเบิกได้`,
+                                    confirmButtonColor: '#0891b2'
+                                });
+                                return;
+                            }
+                            const selectedPart = allStockData.find(p => p.id === item.id);
+                            if (selectedPart) {
+                                factoryOrder.push({ ...selectedPart, recommendedQty: 0, orderQty: 1 });
+                                renderFactoryOrder();
+                                factoryOrderSearch.value = '';
+                                factoryOrderSearchResults.innerHTML = '';
+                            }
+                        });
+                        factoryOrderSearchResults.appendChild(div);
+                    });
+                } else {
+                    factoryOrderSearchResults.innerHTML = '<p class="p-2 text-gray-500">ไม่พบรายการ</p>';
+                }
+            });
+
+            factoryOrderBody.addEventListener('click', (e) => {
+                if (e.target.closest('.remove-from-factory-order-btn')) {
+                    const partId = e.target.closest('.remove-from-factory-order-btn').dataset.id;
+                    factoryOrder = factoryOrder.filter(item => item.id !== partId);
+                    renderFactoryOrder();
+                }
+            });
+
+            factoryOrderBody.addEventListener('change', (e) => {
+                if (e.target.classList.contains('factory-order-qty-input')) {
+                    const index = e.target.dataset.index;
+                    const newQty = parseInt(e.target.value, 10);
+                    if (newQty > 0) factoryOrder[index].orderQty = newQty;
+                    else e.target.value = factoryOrder[index].orderQty;
+                }
+            });
+
+            factoryOrderForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (factoryOrder.length === 0) {
+                    Swal.fire('ผิดพลาด', 'ไม่มีรายการในใบขอเบิก', 'warning');
+                    return;
+                }
+                
+                openSignatureModal('ลงลายเซ็นผู้ขอเบิก', async (signatureData) => {
+                    const orderId = document.getElementById('factory-order-id').value;
+                    const payload = {
+                        orderId: orderId,
+                        requester: { fullName: CURRENT_USER.fullName, agency: CURRENT_USER.agency, department: CURRENT_USER.department, businessCenter: CURRENT_USER.businessCenter },
+                        purpose: document.getElementById('factory-order-purpose').value,
+                        items: factoryOrder.map(item => ({ id: item.id, name: item.name, orderedQty: item.orderQty })),
+                        requesterSignature: signatureData
+                    };
+                    
+                    const action = isFactoryOrderEditMode ? 'updateFactoryOrder' : 'submitFactoryOrder';
+                    const successMessage = isFactoryOrderEditMode ? 'แก้ไขใบขอเบิกสำเร็จ!' : 'ส่งใบขอเบิกสำเร็จ!';
+                    
+                    const result = await fetchFromScript(action, payload);
+                    if (result) {
+                        Swal.fire(successMessage, 'ดำเนินการเรียบร้อยแล้ว', 'success');
+                        document.querySelector('.nav-link[data-page="manage-factory-request"]').click();
+                    }
+                    closeSignatureModal();
+                });
+            });
+
+            // --- Receive Stock Event Listeners ---
+            receiveOrderSelect.addEventListener('change', (e) => {
+                const orderId = e.target.value;
+                if (orderId) {
+                    renderReceiveItems(orderId);
+                } else {
+                    receiveItemsContainer.classList.add('hidden');
+                }
+            });
+
+            receiveItemsBody.addEventListener('click', async (e) => {
+                const saveBtn = e.target.closest('.save-receive-item-btn');
+                if (saveBtn) {
+                    const row = saveBtn.closest('tr');
+                    const input = row.querySelector('.receive-qty-input');
+                    const receivedQty = parseInt(input.value, 10);
+
+                    if (receivedQty < 0) {
+                        Swal.fire('ผิดพลาด', 'จำนวนที่ได้รับต้องไม่ติดลบ', 'warning');
+                        return;
+                    }
+                    if (receivedQty > parseInt(input.max)) {
+                         Swal.fire('ผิดพลาด', 'จำนวนที่ได้รับเกินยอดค้างรับ', 'warning');
+                        return;
+                    }
+                    if (receivedQty === 0) {
+                         Swal.fire({
+                            icon: 'info',
+                            title: 'ไม่มีการเปลี่ยนแปลง',
+                            text: 'คุณยังไม่ได้กรอกจำนวนที่ได้รับ',
+                        });
+                        return;
+                    }
+                    
+                    const payload = {
+                        orderId: selectedOrderIdSpan.textContent,
+                        partId: input.dataset.partId,
+                        receivedQty: receivedQty
+                    };
+
+                    const result = await fetchFromScript('receiveSingleItem', payload);
+                    if (result) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'บันทึกสำเร็จ',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        renderReceiveItems(selectedOrderIdSpan.textContent);
+                    }
+                }
+            });
+
+            // --- Manage Factory Request Event Listeners ---
+            manageRequestListBody.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-factory-order-btn');
+                const deleteBtn = e.target.closest('.delete-factory-order-btn');
+
+                if (editBtn) {
+                    const orderId = editBtn.dataset.id;
+                    setupFactoryOrderForEdit(orderId);
+                }
+                if (deleteBtn) {
+                    const orderId = deleteBtn.dataset.id;
+                    Swal.fire({
+                        title: `คุณแน่ใจหรือไม่?`,
+                        text: `คุณต้องการลบใบขอเบิก ${orderId} ใช่ไหม?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'ใช่, ลบเลย!',
+                        cancelButtonText: 'ยกเลิก'
+                    }).then(async (result) => {
+                        if (result.isConfirmed) {
+                            const deleteResult = await fetchFromScript('deleteFactoryOrder', { orderId });
+                            if (deleteResult) {
+                                Swal.fire('ลบสำเร็จ!', `ใบขอเบิก ${orderId} ถูกลบแล้ว`, 'success');
+                                loadManageFactoryRequestPage();
+                            }
+                        }
+                    });
+                }
+            });
+
+            // --- Approval Page & Modal Listeners ---
+            approvalInternalListBody.addEventListener('click', (e) => {
+                const viewBtn = e.target.closest('.view-approval-btn');
+                if (viewBtn) showApprovalModal(viewBtn.dataset.id, viewBtn.dataset.type);
+            });
+            approvalFactoryListBody.addEventListener('click', (e) => {
+                const viewBtn = e.target.closest('.view-approval-btn');
+                if (viewBtn) showApprovalModal(viewBtn.dataset.id, viewBtn.dataset.type);
+            });
+            closeApprovalModalBtn.addEventListener('click', () => approvalModal.classList.add('hidden'));
+            modalApproveBtn.addEventListener('click', (e) => processApprovalWithSignature(e.target.dataset.id, e.target.dataset.type, 'Approved'));
+            modalRejectEditBtn.addEventListener('click', (e) => processApprovalWithSignature(e.target.dataset.id, e.target.dataset.type, 'Rejected'));
+            modalRejectCancelBtn.addEventListener('click', (e) => processApprovalWithSignature(e.target.dataset.id, e.target.dataset.type, 'Cancelled'));
+
+            // --- Signature Pad Listeners ---
+            clearSignatureBtn.addEventListener('click', () => {
+                signaturePad.clear();
+            });
+
+            saveSignatureBtn.addEventListener('click', () => {
+                if (signaturePad.isEmpty()) {
+                    Swal.fire('ผิดพลาด', 'กรุณาลงลายเซ็นก่อนบันทึก', 'warning');
+                } else {
+                    const signatureData = signaturePad.toDataURL('image/png');
+                    if (signatureCallback) {
+                        signatureCallback(signatureData);
+                    }
+                }
+            });
+
+            // User Management Listeners
+            addUserBtn.addEventListener('click', () => openUserModal());
+            closeUserModalBtn.addEventListener('click', () => userFormModal.classList.add('hidden'));
+            userCanApproveCheckbox.addEventListener('change', () => {
+                userApprovalRightsContainer.classList.toggle('hidden', !userCanApproveCheckbox.checked);
+            });
+            
+            usersListBody.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-user-btn');
+                const deleteBtn = e.target.closest('.delete-user-btn');
+
+                if (editBtn) {
+                    const user = allUsers.find(u => u.id == editBtn.dataset.id);
+                    openUserModal(user);
+                }
+                if (deleteBtn) {
+                    // Delete logic here
+                }
+            });
+
+            userForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = userIdHidden.value;
+                const updatedUser = {
+                    fullName: document.getElementById('user-fullname').value,
+                    email: document.getElementById('user-email').value,
+                    phone: document.getElementById('user-phone').value,
+                    agency: document.getElementById('user-agency').value,
+                    department: document.getElementById('user-department').value,
+                    businessCenter: document.getElementById('user-bu').value,
+                    role: document.getElementById('user-role').value,
+                    canApprove: userCanApproveCheckbox.checked,
+                    approvalRights: {
+                        internal: document.getElementById('user-approve-internal').checked,
+                        factory: document.getElementById('user-approve-factory').checked,
+                    }
+                };
+
+                const action = id ? 'updateUser' : 'addUser';
+                const payload = id ? { ...updatedUser, id } : updatedUser;
+
+                const result = await fetchFromScript(action, payload);
+                if (result) {
+                    Swal.fire('สำเร็จ!', 'บันทึกข้อมูลผู้ใช้เรียบร้อยแล้ว', 'success');
+                    userFormModal.classList.add('hidden');
+                    loadUsersPage();
+                }
+            });
+
+
+            menuToggle.addEventListener('click', () => sidebar.classList.toggle('-translate-x-full'));
+            stockSearch.addEventListener('input', filterAndSearchStock);
+            categoryFilter.addEventListener('change', filterAndSearchStock);
+            stockListBody.addEventListener('click', (e) => {
+                const btn = e.target.closest('.add-to-cart-btn');
+                if (btn) handleAddToCart(btn.dataset.id);
+            });
+            cartItemsBody.addEventListener('click', (e) => {
+                const btn = e.target.closest('.remove-from-cart-btn');
+                if (btn) {
+                    cart.splice(btn.dataset.index, 1);
+                    updateCartBadge();
+                    loadWithdrawRequestPage();
+                }
+            });
+            withdrawForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                openSignatureModal('ลงลายเซ็นผู้ขอเบิก', async (signatureData) => {
+                    const payload = {
+                        orderId: document.getElementById('withdraw-order-id').value,
+                        requester: { fullName: CURRENT_USER.fullName, agency: CURRENT_USER.agency, department: CURRENT_USER.department, businessCenter: CURRENT_USER.businessCenter },
+                        purpose: document.getElementById('withdraw-purpose').value,
+                        items: cart,
+                        requesterSignature: signatureData
+                    };
+                    
+                    const result = await fetchFromScript('submitWithdrawal', payload);
+
+                    if(result) {
+                        Swal.fire('ส่งคำขอสำเร็จ!', 'คำขอเบิกของคุณได้ถูกส่งเพื่อรอการอนุมัติแล้ว', 'success');
+                        cart = [];
+                        updateCartBadge();
+                        document.querySelector('.nav-link[data-page="dashboard"]').click();
+                    }
+                    closeSignatureModal();
+                });
+            });
+
+            // --- Initial Page Load ---
+            const loadDashboard = async () => {
+                const data = await fetchFromScript('getDashboardData');
+                if(data) {
+                    document.getElementById('total-parts-value').textContent = data.totalParts;
+                    document.getElementById('low-stock-value').textContent = data.lowStock;
+                    document.getElementById('approved-value').textContent = data.approvedOrders;
+                    document.getElementById('pending-value').textContent = data.pendingOrders;
+                }
+            };
+
+            const initializeApp = async () => {
+                authContainer.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+
+                document.getElementById('sidebar-username').textContent = CURRENT_USER.fullName;
+                document.getElementById('sidebar-user-role').textContent = CURRENT_USER.role;
+
+                setActiveLink(document.querySelector('.nav-link[data-page="dashboard"]'));
+                showPage('dashboard');
+                await loadStockList(); // Load stock first
+                await loadDashboard(); // Then load dashboard that might depend on stock data
+                if (window.innerWidth < 768) sidebar.classList.add('-translate-x-full');
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth >= 768) sidebar.classList.remove('-translate-x-full');
+                });
+            };
+
+            // --- Authentication Logic ---
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const loginId = document.getElementById('login-id').value;
+                const password = document.getElementById('login-password').value;
+                const user = await fetchFromScript('loginUser', { loginId, password });
+                if (user) {
+                    CURRENT_USER = user;
+                    initializeApp();
+                }
+            });
+
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const payload = {
+                    fullName: document.getElementById('register-fullname').value,
+                    email: document.getElementById('register-email').value,
+                    phone: document.getElementById('register-phone').value,
+                    password: document.getElementById('register-password').value,
+                    agency: document.getElementById('register-agency').value,
+                    department: document.getElementById('register-department').value,
+                    businessCenter: document.getElementById('register-bu').value,
+                };
+                const result = await fetchFromScript('registerUser', payload);
+                if (result) {
+                    Swal.fire('สมัครสำเร็จ!', 'กรุณาเข้าสู่ระบบด้วยข้อมูลของคุณ', 'success');
+                    showLoginLink.click();
+                }
+            });
+
+            showRegisterLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+            });
+
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                registerForm.classList.add('hidden');
+                loginForm.classList.remove('hidden');
+            });
+            
+            logoutBtn.addEventListener('click', () => {
+                CURRENT_USER = null;
+                authContainer.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+            });
+
+        });
+    </script>
+</body>
+</html>
